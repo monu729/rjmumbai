@@ -4,11 +4,14 @@ import Image from "next/image";
 import dynamic from "next/dynamic";
 import Navbar from "@/components/Navbar";
 import ScrollToTopButton from "@/components/ScrollToTopButton";
+const DynamicMarquee = dynamic(() =>  import("../components/Marquee"));
 
 const DynamicCardResult = dynamic(() => import("../components/CardResult"));
 const DynamicTableResult = dynamic(() => import("../components/TableResult"));
-const DynamicFooter = dynamic(() => import("../components/footer"));
 const DynamicResultlistone = dynamic(() =>  import("../components/resultlistone"));
+const DynamicCardone = dynamic(() =>  import("../components/Cardone"));
+
+const DynamicFooter = dynamic(() => import("../components/footer"));
 export default function Home() {
   return (
     <>
@@ -44,9 +47,13 @@ export default function Home() {
       </head>
       <Navbar />
       <Header />
+      <DynamicMarquee />
+
       <DynamicCardResult />
       <DynamicTableResult />
       <DynamicResultlistone />
+      <DynamicCardone />
+      
       <ScrollToTopButton />
 
       <DynamicFooter />
