@@ -23,6 +23,7 @@ export default function RootLayout({ children }) {
           strategy="afterInteractive"
           dangerouslySetInnerHTML={{ __html: googleAnalyticsCode }}
         />
+        <meta name="google-site-verification" content="a7ZIZnWzVsOsNdeLOROb_OK2rRS1jDksIqbbQmo5sf0"/>
       </head>
 
       <body className={inter.className}>{children}</body>
