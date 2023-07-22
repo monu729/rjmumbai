@@ -3,6 +3,8 @@ import Header from "@/components/Header";
 import Image from "next/image";
 import dynamic from "next/dynamic";
 import Navbar from "@/components/Navbar";
+import ScrollToTopButton from "@/components/ScrollToTopButton";
+
 const DynamicCardResult = dynamic(() => import("../components/CardResult"));
 const DynamicTableResult = dynamic(() => import("../components/TableResult"));
 const DynamicFooter = dynamic(() => import("../components/footer"));
@@ -45,6 +47,7 @@ export default function Home() {
       <DynamicCardResult />
       <DynamicTableResult />
       <DynamicResultlistone />
+      <ScrollToTopButton />
 
       <DynamicFooter />
     </>

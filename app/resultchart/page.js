@@ -25,6 +25,8 @@ import Link from "next/link";
 import dynamic from "next/dynamic";
 import Navbar from "@/components/Navbar";
 import Resultlistone from "../../components/resultlistone"
+import ScrollToTopButton from "@/components/ScrollToTopButton";
+
 const DynamicFooter = dynamic(() => import("../../components/footer"));
 const page = () => {
   const [isDropdownVisible, setDropdownVisible] = useState(false);
@@ -470,6 +472,7 @@ const page = () => {
         </p>
       </div>
       <Resultlistone />
+      <ScrollToTopButton />
       <DynamicFooter />
     </>
   );
