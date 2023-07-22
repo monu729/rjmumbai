@@ -16,15 +16,14 @@ export default function RootLayout({ children }) {
   `;
   return (
     <html lang="en">
-       <head>
+      <head>
         <script strategy="afterInteractive" src={`https://www.googletagmanager.com/gtag/js?id=${GA_MEASUREMENT_ID}`} />
         <script
           id="google-analytics"
           strategy="afterInteractive"
           dangerouslySetInnerHTML={{ __html: googleAnalyticsCode }}
         />
-        <meta name="google-site-verification" content="a7ZIZnWzVsOsNdeLOROb_OK2rRS1jDksIqbbQmo5sf0"/>
-      </head>
+        <meta name="google-site-verification" content="a7ZIZnWzVsOsNdeLOROb_OK2rRS1jDksIqbbQmo5sf0" />      </head>
 
       <body className={inter.className}>{children}</body>
     </html>
