@@ -97,7 +97,7 @@ function Header() {
                 >
                   Chart{" "}
                 </Link>
-                <a
+                {/* <a
                   className="inline-block rounded-full px-12 pt-4 pb-3.5 text-sm font-medium uppercase leading-normal text-neutral-50 transition duration-150 ease-in-out hover:bg-neutral-500 hover:bg-opacity-20 hover:text-neutral-200 focus:text-neutral-200 focus:outline-none focus:ring-0 active:text-neutral-300"
                   data-te-ripple-init
                   data-te-ripple-color="light"
@@ -105,7 +105,7 @@ function Header() {
                   role="button"
                 >
                   Learn more
-                </a>
+                </a> */}
               </div>
             </div>
           </div>
