@@ -84,7 +84,6 @@ const resultlistone = () => {
   }, []);
 
   const handleDateSelection = (selectedDate) => {
-    console.log("selected ", selectedDate);
     const year = getYear(selectedDate);
     const month = getMonth(selectedDate);
     const firstDayOfMonth = new Date(year, month, 1);

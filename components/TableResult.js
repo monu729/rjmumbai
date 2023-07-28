@@ -56,7 +56,6 @@ function TableResult() {
       unsubscribeResults();
     };
   }, []);
-  console.log("Dataa", data);
   useEffect(() => {
     const filteredGames = data.games.filter(
       (game) => game.name === "Rj Mumbai"
@@ -79,7 +78,6 @@ function TableResult() {
       .flat();
     setFilteredResults(filteredResults);
   }, [data]);
-  console.log("filteredResults", filteredResults);
   return (
     <>
       <div

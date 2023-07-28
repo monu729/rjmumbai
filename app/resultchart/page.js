@@ -97,7 +97,6 @@ const page = () => {
   };
 
   const handleDateSelection = (selectedDate) => {
-    console.log("selected ", selectedDate);
     setSelectedMonth(getMonth(selectedDate)); // Update the selectedMonth state with the month of the selected date
     setSelectedDate(selectedDate); // Update the selectedDate state with the selected date
   };
@@ -248,7 +247,6 @@ const page = () => {
               <div className="absolute right-0 mt-2 w-44 bg-white divide-y divide-gray-100 rounded-lg shadow">
                 <ul className="py-2 text-sm text-gray-700">
                   {data?.games?.map((game, index) => {
-                    console.log("gggg", game);
                     if (game.type === "timewise") {
                       return (
                         <li key={index}>

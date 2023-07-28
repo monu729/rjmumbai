@@ -132,7 +132,6 @@ function CardResult({ data }) {
     const formattedTime = timePart.slice(0, -2).trim();
     return `${dateTimeParts[0]}, ${formattedTime} ${amPm}`;
   };
-  console.log("gameData----", gameData);
   return (
     <>
       <div

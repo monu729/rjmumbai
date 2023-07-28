@@ -71,7 +71,6 @@ function Header() {
       unsubscribeGames();
     };
   }, []);
-  console.log("gameData", gameData);
   return (
     <>
       <section className="mb-8 overflow-hidden">
