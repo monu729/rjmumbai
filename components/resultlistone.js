@@ -145,10 +145,10 @@ const resultlistone = () => {
                       <th
                         scope="col"
                         className="border-r px-6 py-4 dark:border-neutral-500 bg-red-500"
-                        style={{
-                          backgroundColor: getRandomColor(0.5).color,
-                          color: getRandomColor(0.5).textColor,
-                        }}
+                        // style={{
+                        //   backgroundColor: getRandomColor(0.5).color,
+                        //   color: getRandomColor(0.5).textColor,
+                        // }}
                       >
                         Date
                       </th>
@@ -158,10 +158,10 @@ const resultlistone = () => {
                         key={game.id}
                         scope="col"
                         className="border-r px-6 py-4 dark:border-neutral-500 bg-yellow-500"
-                        style={{
-                          backgroundColor: getRandomColor(0.5).color,
-                          color: getRandomColor(0.5).textColor,
-                        }}
+                        // style={{
+                        //   backgroundColor: getRandomColor(0.5).color,
+                        //   color: getRandomColor(0.5).textColor,
+                        // }}
                 
                      >
                         {game.name}
