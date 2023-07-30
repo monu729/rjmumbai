@@ -10,7 +10,7 @@ const Navbar = () => {
       >
         <div className="flex w-full flex-wrap items-center justify-center px-6">
           <h1 className="bg-black text-white">
-            <Link href="/">💥🤩 Rj mumbai 💥🤩</Link>
+            <Link href="https://www.rjmumbai.com" target="_blank">💥🤩 Rj mumbai 💥🤩</Link>
           </h1>
         </div>
       </nav>
