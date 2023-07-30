@@ -3,19 +3,11 @@ import React from "react";
 import { useState, useEffect } from "react";
 import { format, isSameYear, isSameMonth, isSameDay } from "date-fns";
 import Link from "next/link";
+import { useData } from "./services/useDataSource";
 
-import {
-  onSnapshot,
-  collection,
-  query,
-  where,
-  orderBy,
-  limit,
-  getDocs,
-} from "firebase/firestore";
-import { db } from "../components/config/fire-config";
 function TableResult() {
-  const [data, setData] = useState({ games: [], results: [] });
+  const { games, results } = useData();
+
   const [filteredResults, setFilteredResults] = useState([]);
 
   const currentDate = new Date();
@@ -28,56 +20,27 @@ function TableResult() {
     month: "short",
     year: "numeric",
   });
-  useEffect(() => {
-    const unsubscribeGames = onSnapshot(
-      collection(db, "games"),
-      (gamesSnapshot) => {
-        const games = gamesSnapshot?.docs?.map((doc) => ({
-          id: doc?.id,
-          ...doc.data(),
-        }));
-        setData((prevData) => ({ ...prevData, games }));
-      }
-    );
 
-    const unsubscribeResults = onSnapshot(
-      collection(db, "results"),
-      (resultsSnapshot) => {
-        const results = resultsSnapshot?.docs?.map((doc) => ({
-          id: doc?.id,
-          ...doc?.data(),
-        }));
-        setData((prevData) => ({ ...prevData, results }));
-      }
-    );
-
-    return () => {
-      unsubscribeGames();
-      unsubscribeResults();
-    };
-  }, []);
   useEffect(() => {
-    const filteredGames = data.games.filter(
-      (game) => game.name === "Rj Mumbai"
-    );
-    const filteredResults = filteredGames
-      .map((game) => {
-        const gameResults = data.results.filter(
-          (res) => res.game_id === game.id
-        );
-        return gameResults.map((result) => {
-          const selectedTime = result.selected_time.seconds * 1000; // Convert seconds to milliseconds
-          const formattedTime = format(selectedTime, "dd MMM yyyy, hh:mm a");
-          return {
-            gameName: game.name,
-            resultValue: result.value,
-            selectedTime: formattedTime,
-          };
-        });
-      })
-      .flat();
-    setFilteredResults(filteredResults);
-  }, [data]);
+    if (games && results) {
+      const filteredGames = games.filter((game) => game.name === "Rj Mumbai");
+      const filteredResults = filteredGames
+        .map((game) => {
+          const gameResults = results.filter((res) => res.game_id === game.id);
+          return gameResults.map((result) => {
+            const selectedTime = result.selected_time.seconds * 1000; // Convert seconds to milliseconds
+            const formattedTime = format(selectedTime, "dd MMM yyyy, hh:mm a");
+            return {
+              gameName: game.name,
+              resultValue: result.value,
+              selectedTime: formattedTime,
+            };
+          });
+        })
+        .flat();
+      setFilteredResults(filteredResults);
+    }
+  }, [games, results]);
   return (
     <>
       <div

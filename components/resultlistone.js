@@ -4,14 +4,8 @@
 import React from "react";
 import dynamic from "next/dynamic";
 import { useState, useRef, useEffect } from "react";
-import {
-  collection,
-  onSnapshot,
-  query,
-  orderBy,
-  limit,
-} from "firebase/firestore";
-import { db } from "@/components/config/fire-config";
+import { useData } from "./services/useDataSource";
+
 import {
   format,
   isSameYear,
@@ -27,6 +21,8 @@ import DatePicker from "react-datepicker";
 import "react-datepicker/dist/react-datepicker.css";
 
 const resultlistone = () => {
+  const { games, results } = useData();
+
   const [isDropdownVisible, setDropdownVisible] = useState(false);
 
   const [selectedDate, setSelectedDate] = useState(
@@ -54,35 +50,6 @@ const resultlistone = () => {
   
     return { color, textColor };
   };
-  useEffect(() => {
-    const unsubscribeGames = onSnapshot(
-      collection(db, "games"),
-      (gamesSnapshot) => {
-        const games = gamesSnapshot?.docs?.map((doc) => ({
-          id: doc?.id,
-          ...doc.data(),
-        }));
-        setData((prevData) => ({ ...prevData, games }));
-      }
-    );
-
-    const unsubscribeResults = onSnapshot(
-      collection(db, "results"),
-      (resultsSnapshot) => {
-        const results = resultsSnapshot?.docs?.map((doc) => ({
-          id: doc?.id,
-          ...doc?.data(),
-        }));
-        setData((prevData) => ({ ...prevData, results }));
-      }
-    );
-
-    return () => {
-      unsubscribeGames();
-      unsubscribeResults();
-    };
-  }, []);
-
   const handleDateSelection = (selectedDate) => {
     const year = getYear(selectedDate);
     const month = getMonth(selectedDate);
@@ -92,36 +59,17 @@ const resultlistone = () => {
     setSelectedMonth(month);
   };
 
-  const year = getYear(selectedDate);
-  const month = getMonth(selectedDate);
+  const datewiseGames = games.filter((game) => game.type === "datewise");
 
-  const toggleDropdown = () => {
-    setDropdownVisible(!isDropdownVisible);
-  };
-
-  const handleClickOutside = (event) => {
-    if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
-      setDropdownVisible(false);
-    }
-  };
-
-  useEffect(() => {
-    document.addEventListener("mousedown", handleClickOutside);
-    return () => {
-      document.removeEventListener("mousedown", handleClickOutside);
-    };
-  }, []);
-  const datewiseGames = data.games.filter((game) => game.type === "datewise");
-
-  // Filter and format results for the current game
-  const formattedResults = data.results.map((result) => {
+   // Filter and format results for the current game
+   const formattedResults = results.map((result) => {
     const selectedTime = result.selected_time.seconds * 1000;
     const formattedTime = format(selectedTime, "dd MMM yyyy, hh:mm a");
     return {
-      gameName: data.games.find((game) => game.id === result.game_id)?.name,
+      gameName: games.find((game) => game.id === result.game_id)?.name,
       resultValue: result.value,
       selectedTime: formattedTime,
-      type: data.games.find((game) => game.id === result.game_id)?.type,
+      type: games.find((game) => game.id === result.game_id)?.type,
     };
   });
 
@@ -147,12 +95,28 @@ const resultlistone = () => {
     .sort((a, b) => {
       return new Date(a.selectedTime) - new Date(b.selectedTime);
     });
+
   const formattedSelectedDate = format(selectedDate, "dd-MMM-yyyy");
   const startDate = startOfMonth(selectedDate);
   const daysInMonth = getDaysInMonth(selectedDate);
-  const datesInMonth = Array.from({ length: daysInMonth }, (_, index) =>
-    addDays(startDate, index)
-  );
+  const datesInMonth = Array.from({ length: daysInMonth }, (_, index) => addDays(startDate, index));
+
+
+
+  const handleClickOutside = (event) => {
+    if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
+      setDropdownVisible(false);
+    }
+  };
+
+  useEffect(() => {
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+    };
+  }, []);
+
+
 
   return (
     <>

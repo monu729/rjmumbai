@@ -2,14 +2,8 @@
 
 import React from "react";
 import { useState, useRef, useEffect } from "react";
-import {
-  collection,
-  onSnapshot,
-  query,
-  orderBy,
-  limit,
-} from "firebase/firestore";
-import { db } from "@/components/config/fire-config";
+import { useData } from "@/components/services/useDataSource";
+
 import {
   format,
   isSameYear,
@@ -29,6 +23,8 @@ import ScrollToTopButton from "@/components/ScrollToTopButton";
 
 const DynamicFooter = dynamic(() => import("../../components/footer"));
 const page = () => {
+  const { games, results } = useData(); 
+
   const [isDropdownVisible, setDropdownVisible] = useState(false);
   const [selectedGame, setSelectedGame] = useState(null);
 
@@ -51,45 +47,19 @@ const page = () => {
   ];
   const [selectedMonth, setSelectedMonth] = useState(getMonth(new Date()));
   const dropdownRef = useRef(null);
-  const [data, setData] = useState({ games: [], results: [] });
-
+  const [data, setData] = useState({ games: [], results: [], filteredResults: [] });
+ 
   useEffect(() => {
-    const unsubscribeGames = onSnapshot(
-      collection(db, "games"),
-      (gamesSnapshot) => {
-        const games = gamesSnapshot?.docs?.map((doc) => ({
-          id: doc?.id,
-          ...doc.data(),
-        }));
-        setData((prevData) => ({ ...prevData, games }));
-        if (games.length > 0) {
-          // setSelectedGame(games[0]); // Update selectedGame once games data is available
-          const timewiseGames = games.filter(
-            (game) => game.type === "timewise"
-          );
-          if (timewiseGames.length > 0) {
-            setSelectedGame(timewiseGames[0]);
-          }
-        }
-      }
-    );
+    setData({ games, results }); // Set the initial data directly from the hook
 
-    const unsubscribeResults = onSnapshot(
-      collection(db, "results"),
-      (resultsSnapshot) => {
-        const results = resultsSnapshot?.docs?.map((doc) => ({
-          id: doc?.id,
-          ...doc?.data(),
-        }));
-        setData((prevData) => ({ ...prevData, results }));
+    if (games.length > 0) {
+      // Set the initial selectedGame once games data is available
+      const timewiseGames = games.filter((game) => game.type === "timewise");
+      if (timewiseGames.length > 0) {
+        setSelectedGame(timewiseGames[0]);
       }
-    );
-
-    return () => {
-      unsubscribeGames();
-      unsubscribeResults();
-    };
-  }, []);
+    }
+  }, [games, results]);
 
   const handleGameSelection = (game) => {
     setSelectedGame(game);
@@ -143,7 +113,7 @@ const page = () => {
       );
     });
     setData((prevData) => ({ ...prevData, filteredResults }));
-  }, [selectedGame, selectedMonth]);
+  }, [selectedGame, selectedMonth, startDate, formattedResults]);
 
   const currentDate = new Date(); // Get the current date and time
 

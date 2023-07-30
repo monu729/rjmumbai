@@ -1,19 +1,10 @@
 "use client";
 import { React, useState, useEffect } from "react";
-import Image from "next/image";
-import arrow from "../public/arrow.jpg";
-import {
-  onSnapshot,
-  collection,
-  query,
-  where,
-  orderBy,
-  limit,
-  getDocs,
-} from "firebase/firestore";
+import { useData } from "./services/useDataSource";
 
-import { db } from "../components/config/fire-config";
 function CardResult({ data }) {
+  const { games, results } = useData();
+
   const [gameData, setGameData] = useState({
     game: null,
     result: null,
@@ -45,75 +36,7 @@ function CardResult({ data }) {
     const textColor = luminance > 0.5 ? "black" : "white";
 
     return { color, textColor };
-  };
-  useEffect(() => {
-    const unsubscribeGames = onSnapshot(
-      collection(db, "games"),
-      (gamesSnapshot) => {
-        const games = gamesSnapshot.docs.map((doc) => ({
-          id: doc.id,
-          ...doc.data(),
-        }));
-        const currentTimeInSeconds = Math.floor(Date.now() / 1000);
-        const updatedGameData = {};
-        games.forEach((game) => {
-          const unsubscribeResults = onSnapshot(
-            query(
-              collection(db, "results"),
-              where("game_id", "==", game.id),
-              where("selected_time", "<=", new Date()),
-              orderBy("selected_time", "desc"),
-              limit(1)
-            ),
-            (resultsSnapshot) => {
-              const results = resultsSnapshot.docs.map((doc) => ({
-                id: doc.id,
-                ...doc.data(),
-              }));
-
-              if (results.length > 0) {
-                const selectedResult = results[0];
-                const selectedTimeInSeconds =
-                  selectedResult.selected_time.seconds;
-
-                if (selectedTimeInSeconds <= currentTimeInSeconds) {
-                  const { color, textColor } = getRandomColor();
-
-                  updatedGameData[game.id] = {
-                    game,
-                    result: selectedResult,
-                    color,
-                    textColor,
-                  };
-                } else {
-                  updatedGameData[game.id] = {
-                    game,
-                    result: null,
-                    color: null,
-                    textColor: null,
-                  };
-                }
-              } else {
-                const { color, textColor } = getRandomColor();
-                updatedGameData[game.id] = {
-                  game,
-                  result: null,
-                  color,
-                  textColor,
-                };
-              }
-              setGameData(updatedGameData);
-            }
-          );
-        });
-
-        return () => {
-          unsubscribeGames();
-        };
-      }
-    );
-  }, []);
-
+  }; 
   const formatDateTime = (seconds) => {
     const date = new Date(seconds * 1000);
     const options = {
@@ -132,6 +55,69 @@ function CardResult({ data }) {
     const formattedTime = timePart.slice(0, -2).trim();
     return `${dateTimeParts[0]}, ${formattedTime} ${amPm}`;
   };
+  
+  useEffect(() => {
+    if (games && results) {
+      const currentTimeInSeconds = Math.floor(Date.now() / 1000);
+      const updatedGameData = {};
+
+      games.forEach((game) => {
+        const selectedResults = results.filter(
+          (result) =>
+            result.game_id === game.id &&
+            result.selected_time.seconds <= currentTimeInSeconds
+        );
+
+        if (selectedResults.length > 0) {
+          selectedResults.sort(
+            (a, b) => b.selected_time.seconds - a.selected_time.seconds
+          );
+
+          const selectedResult = selectedResults[0];
+          const { color, textColor } = getRandomColor();
+
+          updatedGameData[game.id] = {
+            game,
+            result: selectedResult,
+            color,
+            textColor,
+          };
+        } else {
+          // Check for future results and set the nearest one
+          const futureResults = results.filter(
+            (result) => result.game_id === game.id
+          );
+
+          if (futureResults.length > 0) {
+            futureResults.sort(
+              (a, b) => a.selected_time.seconds - b.selected_time.seconds
+            );
+
+            const selectedResult = futureResults[0];
+            const { color, textColor } = getRandomColor();
+
+            updatedGameData[game.id] = {
+              game,
+              result: selectedResult,
+              color,
+              textColor,
+            };
+          } else {
+            // If there are no results at all
+            const { color, textColor } = getRandomColor();
+            updatedGameData[game.id] = {
+              game,
+              result: null,
+              color,
+              textColor,
+            };
+          }
+        }
+      });
+
+      setGameData(updatedGameData);
+    }
+  }, [games, results]);
   return (
     <>
       <div

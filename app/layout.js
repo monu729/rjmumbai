@@ -1,5 +1,6 @@
 import './globals.css'
 import { Inter } from 'next/font/google'
+import { DataProvider } from '@/components/services/useDataSource';
 
 const inter = Inter({ subsets: ['latin'] })
 
@@ -25,7 +26,10 @@ export default function RootLayout({ children }) {
         />
         <meta name="google-site-verification" content="a7ZIZnWzVsOsNdeLOROb_OK2rRS1jDksIqbbQmo5sf0" />      </head>
 
-      <body className={inter.className}>{children}</body>
+      <body className={inter.className}>
+      <DataProvider>{children}</DataProvider>
+
+      </body>
     </html>
   )
 }

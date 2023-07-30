@@ -1,76 +1,49 @@
 "use client";
 import { React, useState, useEffect } from "react";
-import {
-  onSnapshot,
-  collection,
-  query,
-  where,
-  orderBy,
-  limit,
-} from "firebase/firestore";
-import { db } from "../components/config/fire-config";
+import { useData } from "./services/useDataSource";
+
 import Link from "next/link";
 
 function Header() {
+  const { games, results } = useData();
   const [gameData, setGameData] = useState({ game: null, result: null });
 
-  useEffect(() => {
-    const unsubscribeGames = onSnapshot(
-      collection(db, "games"),
-      (gamesSnapshot) => {
-        const games = gamesSnapshot?.docs.map((doc) => ({
-          id: doc.id,
-          ...doc.data(),
-        }));
+  const findGameAndResult = () => {
+    if (games && results) {
+      const rjMumbaiGame = games.find((game) => game.name === "Rj Mumbai");
+      if (rjMumbaiGame) {
+        const currentTimeInSeconds = Math.floor(Date.now() / 1000);
 
-        const rjMumbaiGame = games?.find((game) => game.name === "Rj Mumbai");
+        const selectedResults = results.filter(
+          (result) =>
+            result.game_id === rjMumbaiGame.id &&
+            result.selected_time.seconds <= currentTimeInSeconds
+        );
 
-        if (rjMumbaiGame) {
-          const currentTimeInSeconds = Math.floor(Date.now() / 1000);
-
-          const unsubscribeResults = onSnapshot(
-            query(
-              collection(db, "results"),
-              where("game_id", "==", rjMumbaiGame?.id),
-              where("selected_time", "<=", new Date()),
-              orderBy("selected_time", "desc"),
-              limit(1)
-            ),
-            (resultsSnapshot) => {
-              const results = resultsSnapshot.docs.map((doc) => ({
-                id: doc.id,
-                ...doc.data(),
-              }));
-
-              if (results?.length > 0) {
-                const selectedResult = results[0];
-                const selectedTimeInSeconds =
-                  selectedResult.selected_time.seconds;
-
-                if (selectedTimeInSeconds <= currentTimeInSeconds) {
-                  setGameData({ game: rjMumbaiGame, result: selectedResult });
-                } else {
-                  setGameData({ game: null, result: null });
-                }
-              } else {
-                setGameData({ game: null, result: null });
-              }
-            }
+        if (selectedResults.length > 0) {
+          // Find the latest result with the closest selected_time to the current time
+          const selectedResult = selectedResults.reduce((prev, current) =>
+            current.selected_time.seconds > prev.selected_time.seconds ? current : prev
           );
+          const selectedTimeInSeconds = selectedResult.selected_time.seconds;
 
-          return () => {
-            unsubscribeResults();
-          };
+          if (selectedTimeInSeconds <= currentTimeInSeconds) {
+            setGameData({ game: rjMumbaiGame, result: selectedResult });
+          } else {
+            setGameData({ game: null, result: null });
+          }
         } else {
           setGameData({ game: null, result: null });
         }
+      } else {
+        setGameData({ game: null, result: null });
       }
-    );
+    }
+  };
 
-    return () => {
-      unsubscribeGames();
-    };
-  }, []);
+  useEffect(() => {
+    findGameAndResult();
+  }, [games, results]);
   return (
     <>
       <section className="mb-8 overflow-hidden">
