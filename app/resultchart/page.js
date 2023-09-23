@@ -310,7 +310,7 @@ const page = () => {
           />
         </div>
       </div>
-      <div class="flex flex-col">
+      {/* <div class="flex flex-col">
         <div class="overflow-x-auto pl-4 pr-4  sm:-mx-6  lg:-mx-8">
           <div class="inline-block min-w-full py-2 sm:px-6 lg:px-8">
             <div class="overflow-hidden">
@@ -359,7 +359,7 @@ const page = () => {
             </div>
           </div>
         </div>
-      </div>{" "}
+      </div>{" "} */}
       <div className="w-full p-3 text-center bg-teal-500 border border-gray-200 rounded-lg shadow sm:p-8 dark:bg-gray-800 dark:border-gray-700">
         <h5 className="mb-2 text-3xl font-bold  text-white">
           <span className="border-b-2 border-white animate-blink">

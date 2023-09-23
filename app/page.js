@@ -49,7 +49,7 @@ export default function Home() {
       <Header />
       <DynamicMarquee />
 
-      <DynamicCardResult />
+      {/* <DynamicCardResult /> */}
       <DynamicTableResult />
       <DynamicResultlistone />
       <DynamicCardone />
