@@ -189,7 +189,7 @@ const page = () => {
            PANEL CHART | RJ MUMBAI  CHART 1990
         </p>
       </div>
-      <div className="flex flex-col items-center mt-10 sm:flex-row sm:justify-center sm:items-center">
+      {/* <div className="flex flex-col items-center mt-10 sm:flex-row sm:justify-center sm:items-center">
         <div className="mb-4 sm:mr-4 sm:mb-0 relative z-10">
           <div ref={dropdownRef} className="relative inline-block">
             <button
@@ -309,7 +309,7 @@ const page = () => {
             className="px-2 py-1 border border-gray-300 rounded"
           />
         </div>
-      </div>
+      </div> */}
       {/* <div class="flex flex-col">
         <div class="overflow-x-auto pl-4 pr-4  sm:-mx-6  lg:-mx-8">
           <div class="inline-block min-w-full py-2 sm:px-6 lg:px-8">
