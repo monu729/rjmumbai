@@ -135,7 +135,7 @@ const page = () => {
     });
   return (
     <>
-        <head>
+        {/* <head>
         <title>
         Rj mubai Chart | Panel Chart, Result, Old Record
         </title>
@@ -165,10 +165,7 @@ const page = () => {
           content="https://www.rjmumbai.com/resultchart"
         />
         <meta property="og:type" content="website" />
-        {/* <meta
-          property="og:image"
-          content="https://www.rjmumbai.com/_next/static/media/logo.642444d4.svg"
-        /> */}
+      
         <meta property="og:image:alt" content="Rj mubai Chart" />
       </head>
       <Navbar />
@@ -233,7 +230,7 @@ const page = () => {
                         </li>
                       );
                     }
-                    return null; // Skip rendering games with types other than "timewise"
+                    return null; 
                   })}
                 </ul>
               </div>
@@ -441,7 +438,8 @@ const page = () => {
       </div>
       <Resultlistone />
       <ScrollToTopButton />
-      <DynamicFooter />
+      <DynamicFooter /> */}
+      <h1>Page not Found</h1>
     </>
   );
 };
