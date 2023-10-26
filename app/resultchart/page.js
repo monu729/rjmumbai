@@ -135,7 +135,7 @@ const page = () => {
     });
   return (
     <>
-        {/* <head>
+        <head>
         <title>
         Rj mubai Chart | Panel Chart, Result, Old Record
         </title>
@@ -438,8 +438,8 @@ const page = () => {
       </div>
       <Resultlistone />
       <ScrollToTopButton />
-      <DynamicFooter /> */}
-      <h1>Page not Found</h1>
+      <DynamicFooter />
+      
     </>
   );
 };

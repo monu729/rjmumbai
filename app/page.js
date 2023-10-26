@@ -45,7 +45,7 @@ export default function Home() {
           content="Rj mubai - Live Satta Result and Chart"
         />
       </head>
-      {/* <Navbar />
+      <Navbar />
       <Header />
       <DynamicMarquee />
 
@@ -56,8 +56,7 @@ export default function Home() {
       
       <ScrollToTopButton />
 
-      <DynamicFooter /> */}
-      <h1>Page not found</h1>
+      <DynamicFooter />
     </>
   );
 }
