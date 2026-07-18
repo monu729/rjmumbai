@@ -1,19 +1,14 @@
 "use client";
-import React from "react";
-import { useState, useEffect } from "react";
-import { format, isSameYear, isSameMonth, isSameDay } from "date-fns";
+import React, { useMemo } from "react";
+import { format, startOfDay, endOfDay } from "date-fns";
 import Link from "next/link";
-import { useData } from "./services/useDataSource";
+import { useData, useResults } from "./services/useDataSource";
 
 function TableResult() {
-  const { games, results } = useData();
-
-  const [filteredResults, setFilteredResults] = useState([]);
+  const { games } = useData();
+  const rjMumbaiGame = games.find((game) => game.name === "Rj Mumbai");
 
   const currentDate = new Date();
-  const month = currentDate.getMonth() + 1;
-  const year = currentDate.getFullYear();
-  const daysInMonth = new Date(year, month, 0).getDate();
 
   const formattedCurrentDate = currentDate.toLocaleString("en-US", {
     day: "2-digit",
@@ -21,26 +16,27 @@ function TableResult() {
     year: "numeric",
   });
 
-  useEffect(() => {
-    if (games && results) {
-      const filteredGames = games.filter((game) => game.name === "Rj Mumbai");
-      const filteredResults = filteredGames
-        .map((game) => {
-          const gameResults = results.filter((res) => res.game_id === game.id);
-          return gameResults.map((result) => {
-            const selectedTime = result.selected_time.seconds * 1000; // Convert seconds to milliseconds
-            const formattedTime = format(selectedTime, "dd MMM yyyy, hh:mm a");
-            return {
-              gameName: game.name,
-              resultValue: result.value,
-              selectedTime: formattedTime,
-            };
-          });
-        })
-        .flat();
-      setFilteredResults(filteredResults);
-    }
-  }, [games, results]);
+  // Today's Rj Mumbai results only - fetched server-side instead of
+  // downloading the whole results collection.
+  const { results } = useResults({
+    gameId: rjMumbaiGame?.id ?? null,
+    startMs: startOfDay(currentDate).getTime(),
+    endMs: endOfDay(currentDate).getTime(),
+    enabled: !!rjMumbaiGame,
+  });
+
+  const filteredResults = useMemo(
+    () =>
+      results.map((result) => ({
+        gameName: rjMumbaiGame?.name,
+        resultValue: result.value,
+        selectedTime: format(
+          result.selected_time.seconds * 1000,
+          "dd MMM yyyy, hh:mm a"
+        ),
+      })),
+    [results, rjMumbaiGame]
+  );
   return (
     <>
       <div

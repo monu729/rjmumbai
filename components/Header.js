@@ -1,49 +1,28 @@
 "use client";
-import { React, useState, useEffect } from "react";
-import { useData } from "./services/useDataSource";
+import React, { useState, useEffect } from "react";
+import { useData, fetchLatestResultForGame } from "./services/useDataSource";
 
 import Link from "next/link";
 
 function Header() {
-  const { games, results } = useData();
+  const { games } = useData();
   const [gameData, setGameData] = useState({ game: null, result: null });
 
-  const findGameAndResult = () => {
-    if (games && results) {
-      const rjMumbaiGame = games.find((game) => game.name === "Rj Mumbai");
-      if (rjMumbaiGame) {
-        const currentTimeInSeconds = Math.floor(Date.now() / 1000);
-
-        const selectedResults = results.filter(
-          (result) =>
-            result.game_id === rjMumbaiGame.id &&
-            result.selected_time.seconds <= currentTimeInSeconds
-        );
-
-        if (selectedResults.length > 0) {
-          // Find the latest result with the closest selected_time to the current time
-          const selectedResult = selectedResults.reduce((prev, current) =>
-            current.selected_time.seconds > prev.selected_time.seconds ? current : prev
-          );
-          const selectedTimeInSeconds = selectedResult.selected_time.seconds;
-
-          if (selectedTimeInSeconds <= currentTimeInSeconds) {
-            setGameData({ game: rjMumbaiGame, result: selectedResult });
-          } else {
-            setGameData({ game: null, result: null });
-          }
-        } else {
-          setGameData({ game: null, result: null });
-        }
-      } else {
-        setGameData({ game: null, result: null });
-      }
-    }
-  };
-
   useEffect(() => {
-    findGameAndResult();
-  }, [games, results]);
+    const rjMumbaiGame = games.find((game) => game.name === "Rj Mumbai");
+    if (!rjMumbaiGame) return;
+    let cancelled = false;
+    fetchLatestResultForGame(rjMumbaiGame.id, { pastOnly: true })
+      .then((result) => {
+        if (!cancelled) setGameData({ game: rjMumbaiGame, result });
+      })
+      .catch((error) =>
+        console.error("Failed to fetch latest result:", error)
+      );
+    return () => {
+      cancelled = true;
+    };
+  }, [games]);
   return (
     <>
       <section className="mb-8 overflow-hidden">

@@ -1,16 +1,15 @@
 "use client";
 
 import React from "react";
-import { useState, useRef, useEffect } from "react";
-import { useData } from "@/components/services/useDataSource";
+import { useState, useRef, useEffect, useMemo } from "react";
+import { useData, useResults } from "@/components/services/useDataSource";
 
 import {
   format,
-  isSameYear,
-  isSameMonth,
-  isSameDay,
   getMonth,
   getYear,
+  startOfDay,
+  endOfDay,
 } from "date-fns";
 import DatePicker from "react-datepicker";
 import "react-datepicker/dist/react-datepicker.css";
@@ -23,13 +22,12 @@ import ScrollToTopButton from "@/components/ScrollToTopButton";
 
 const DynamicFooter = dynamic(() => import("../../components/footer"));
 const page = () => {
-  const { games, results } = useData(); 
+  const { games } = useData();
 
   const [isDropdownVisible, setDropdownVisible] = useState(false);
   const [selectedGame, setSelectedGame] = useState(null);
 
   const [selectedDate, setSelectedDate] = useState(new Date());
-  const [startDate, setStartDate] = useState(new Date());
   const years = range(1990, getYear(new Date()) + 1, 1);
   const months = [
     "January",
@@ -45,30 +43,24 @@ const page = () => {
     "November",
     "December",
   ];
-  const [selectedMonth, setSelectedMonth] = useState(getMonth(new Date()));
   const dropdownRef = useRef(null);
-  const [data, setData] = useState({ games: [], results: [], filteredResults: [] });
- 
-  useEffect(() => {
-    setData({ games, results }); // Set the initial data directly from the hook
 
+  useEffect(() => {
     if (games.length > 0) {
       // Set the initial selectedGame once games data is available
-      const timewiseGames = games.filter((game) => game.type === "timewise");
-      if (timewiseGames.length > 0) {
-        setSelectedGame(timewiseGames[0]);
-      }
+      const defaultGame =
+        games.find((game) => game.name === "Rj Mumbai") || games[0];
+      setSelectedGame(defaultGame);
     }
-  }, [games, results]);
+  }, [games]);
 
   const handleGameSelection = (game) => {
     setSelectedGame(game);
     setDropdownVisible(false);
   };
 
-  const handleDateSelection = (selectedDate) => {
-    setSelectedMonth(getMonth(selectedDate)); // Update the selectedMonth state with the month of the selected date
-    setSelectedDate(selectedDate); // Update the selectedDate state with the selected date
+  const handleDateSelection = (date) => {
+    setSelectedDate(date);
   };
 
   const toggleDropdown = () => {
@@ -88,56 +80,43 @@ const page = () => {
     };
   }, []);
 
-  const gameResults = data.results.filter(
-    (result) => result.game_id === selectedGame?.id
-  );
-
-  const formattedResults = gameResults.map((result) => {
-    const selectedTime = result.selected_time.seconds * 1000; // Convert seconds to milliseconds
-    const formattedTime = format(selectedTime, "dd MMM yyyy, hh:mm a");
-    return {
-      gameName: selectedGame?.name,
-      resultValue: result.value,
-      selectedTime: formattedTime,
-      type: selectedGame.type,
-    };
+  // Only the selected game's results for the selected day, fetched
+  // server-side (a few document reads instead of the whole collection).
+  const { results: gameResults } = useResults({
+    gameId: selectedGame?.id ?? null,
+    startMs: startOfDay(selectedDate).getTime(),
+    endMs: endOfDay(selectedDate).getTime(),
+    enabled: !!selectedGame,
   });
 
-  useEffect(() => {
-    const filteredResults = formattedResults.filter((result) => {
-      const resultTime = new Date(result.selectedTime);
-      return (
-        isSameYear(resultTime, startDate) &&
-        isSameMonth(resultTime, startDate) &&
-        isSameDay(resultTime, startDate)
-      );
-    });
-    setData((prevData) => ({ ...prevData, filteredResults }));
-  }, [selectedGame, selectedMonth, startDate, formattedResults]);
+  const formattedResults = useMemo(
+    () =>
+      gameResults.map((result) => {
+        const selectedTime = result.selected_time.seconds * 1000; // Convert seconds to milliseconds
+        const formattedTime = format(selectedTime, "dd MMM yyyy, hh:mm a");
+        return {
+          gameName: selectedGame?.name,
+          resultValue: result.value,
+          selectedTime: formattedTime,
+          type: selectedGame.type,
+        };
+      }),
+    [gameResults, selectedGame]
+  );
 
-  const currentDate = new Date(); // Get the current date and time
-
-  const sortedResults = formattedResults
-    .filter((result) => {
-      const resultMonth = getMonth(new Date(result.selectedTime));
-      return (
-        selectedGame &&
-        result.gameName === selectedGame.name &&
-        resultMonth === selectedMonth
-      );
-    })
-    .filter((result) => {
-      const selectedTime = new Date(result.selectedTime);
-      return selectedTime <= currentDate; // Only include results that are on or before the current date and time
-    })
-    .sort((a, b) => {
-      return new Date(a.selectedTime) - new Date(b.selectedTime);
-    });
+  // The query is already day-scoped and time-ordered; just hide results
+  // whose time hasn't arrived yet (later today).
+  const sortedResults = useMemo(() => {
+    const now = new Date();
+    return formattedResults.filter(
+      (result) => new Date(result.selectedTime) <= now
+    );
+  }, [formattedResults]);
   return (
     <>
-        <head>
+      <head>
         <title>
-        Rj mubai Chart | Panel Chart, Result, Old Record
+          Rj mubai Chart | Panel Chart, Result, Old Record
         </title>
         <meta
           name="keywords"
@@ -165,7 +144,7 @@ const page = () => {
           content="https://www.rjmumbai.com/resultchart"
         />
         <meta property="og:type" content="website" />
-      
+
         <meta property="og:image:alt" content="Rj mubai Chart" />
       </head>
       <Navbar />
@@ -177,14 +156,22 @@ const page = () => {
         </h5>
         <p className="mb-5 text-base  sm:text-lg text-white">
           RJ MUMBAI  PANEL CHART |RJ MUMBAI  CHART | RJ MUMBAI
-           MATKA CHART | RJ MUMBAI  CHARTS | RJ MUMBAI 
+          MATKA CHART | RJ MUMBAI  CHARTS | RJ MUMBAI
           | RJ MUMBAI  OLD CHART | RJ MUMBAI  PANEL OLD RECORD |
           SATTA MATKA RJ MUMBAI  | SATTA MATKA RECORD | SATTA | RJ
           MUMBAI  CHART PANEL | RJ MUMBAI  CHART OPEN | RJ
           MUMBAI  WITH PANEL | FASTEST RJ MUMBAI  | RJ MUMBAI
-           CHART MATKA | RJ MUMBAI  CHART DP | DPBOSS RJ MUMBAI
-           PANEL CHART | RJ MUMBAI  CHART 1990
+          CHART MATKA | RJ MUMBAI  CHART DP | DPBOSS RJ MUMBAI
+          PANEL CHART | RJ MUMBAI  CHART 1990
         </p>
+      </div>
+      <div
+        className="mb-4 mt-6 rounded-lg bg-neutral-800 px-6 py-5 text-base text-neutral-50 dark:bg-neutral-900 text-center"
+        role="alert"
+      >
+        <h3 className="font-bold text-green-500 text-xl mb-4">
+          -: Daily Result :-
+        </h3>
       </div>
       <div className="flex flex-col items-center mt-10 sm:flex-row sm:justify-center sm:items-center">
         <div className="mb-4 sm:mr-4 sm:mb-0 relative z-10">
@@ -213,25 +200,19 @@ const page = () => {
             {isDropdownVisible && (
               <div className="absolute right-0 mt-2 w-44 bg-white divide-y divide-gray-100 rounded-lg shadow">
                 <ul className="py-2 text-sm text-gray-700">
-                  {data?.games?.map((game, index) => {
-                    if (game.type === "timewise") {
-                      return (
-                        <li key={index}>
-                          <a
-                            className={`block px-4 py-2 hover:bg-gray-100 dark:hover:bg-gray-600 dark:hover:text-white ${
-                              selectedGame && selectedGame.id === game.id
-                                ? "bg-gray-200"
-                                : ""
-                            }`}
-                            onClick={() => handleGameSelection(game)}
-                          >
-                            {game.name}
-                          </a>
-                        </li>
-                      );
-                    }
-                    return null; 
-                  })}
+                  {games.map((game) => (
+                    <li key={game.id}>
+                      <a
+                        className={`block px-4 py-2 hover:bg-gray-100 dark:hover:bg-gray-600 dark:hover:text-white ${selectedGame && selectedGame.id === game.id
+                            ? "bg-gray-200"
+                            : ""
+                          }`}
+                        onClick={() => handleGameSelection(game)}
+                      >
+                        {game.name}
+                      </a>
+                    </li>
+                  ))}
                 </ul>
               </div>
             )}
@@ -329,16 +310,8 @@ const page = () => {
                   </tr>
                 </thead>
                 <tbody>
-                  {sortedResults
-                    .filter((result) => {
-                      const resultDate = new Date(result.selectedTime);
-                      return (
-                        isSameYear(resultDate, selectedDate) &&
-                        isSameMonth(resultDate, selectedDate) &&
-                        isSameDay(resultDate, selectedDate)
-                      );
-                    })
-                    .map((result, index) => (
+                  {sortedResults.length > 0 ? (
+                    sortedResults.map((result, index) => (
                       <tr
                         key={index}
                         className="w-15 border-b dark:border-neutral-500"
@@ -350,7 +323,17 @@ const page = () => {
                           {result.resultValue}
                         </td>
                       </tr>
-                    ))}
+                    ))
+                  ) : (
+                    <tr>
+                      <td
+                        colSpan={2}
+                        className="px-6 py-4 text-neutral-500"
+                      >
+                        No results found for the selected date.
+                      </td>
+                    </tr>
+                  )}
                 </tbody>
               </table>
             </div>
@@ -372,7 +355,7 @@ const page = () => {
           about the game.
         </p>
         <p className="mb-5 text-base  sm:text text-white">
-          At matka center we provide the most updated live Rj Mumbai 
+          At matka center we provide the most updated live Rj Mumbai
           Panel Chart. We have been into this market for the past 70 years and
           we have seen all the phases, here at matka center you will get all the
           genuine details only. Satta matka is a type of gambling or lottery
@@ -387,7 +370,7 @@ const page = () => {
         </p>
         <p className="mb-5 text-base  sm:text text-white">
           There are lots of websites who used to provide up to date Rj Mumbai
-           charts but right here at matka middle you will get it
+          charts but right here at matka middle you will get it
           completely loose and our group regularly updated this chart from 1970.
         </p>
         <p className="mb-5 text-base  sm:text text-white">
@@ -406,8 +389,8 @@ const page = () => {
         <p className="mb-5 text-base  sm:text text-white">
           Exclusive sorts of Rj Mumbai  chart are major bazar panel
           chart, Rj Mumbai  panel old chart, satta matka Rj Mumbai
-           panel chart, matka Rj Mumbai  panel chart, Rj Mumbai
-           panel chart 2023, oldest Rj Mumbai  panel chart, up
+          panel chart, matka Rj Mumbai  panel chart, Rj Mumbai
+          panel chart 2023, oldest Rj Mumbai  panel chart, up
           to date Rj Mumbai  panel chart and others.
         </p>
         <p className="mb-5 text-base  sm:text text-white">
@@ -439,7 +422,7 @@ const page = () => {
       <Resultlistone />
       <ScrollToTopButton />
       <DynamicFooter />
-      
+
     </>
   );
 };

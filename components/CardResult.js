@@ -1,19 +1,12 @@
 "use client";
-import { React, useState, useEffect } from "react";
-import { useData } from "./services/useDataSource";
+import React, { useState, useEffect } from "react";
+import { useData, fetchLatestResultForGame } from "./services/useDataSource";
 
-function CardResult({ data }) {
-  const { games, results } = useData();
+function CardResult() {
+  const { games } = useData();
 
-  const [gameData, setGameData] = useState({
-    game: null,
-    result: null,
-    color: null,
-  });
+  const [gameData, setGameData] = useState({});
   const currentDate = new Date();
-  const month = currentDate.getMonth() + 1;
-  const year = currentDate.getFullYear();
-  const daysInMonth = new Date(year, month, 0).getDate();
 
   const formattedCurrentDate = currentDate.toLocaleString("en-US", {
     day: "2-digit",
@@ -57,67 +50,27 @@ function CardResult({ data }) {
   };
   
   useEffect(() => {
-    if (games && results) {
-      const currentTimeInSeconds = Math.floor(Date.now() / 1000);
-      const updatedGameData = {};
-
-      games.forEach((game) => {
-        const selectedResults = results.filter(
-          (result) =>
-            result.game_id === game.id &&
-            result.selected_time.seconds <= currentTimeInSeconds
-        );
-
-        if (selectedResults.length > 0) {
-          selectedResults.sort(
-            (a, b) => b.selected_time.seconds - a.selected_time.seconds
-          );
-
-          const selectedResult = selectedResults[0];
-          const { color, textColor } = getRandomColor();
-
-          updatedGameData[game.id] = {
-            game,
-            result: selectedResult,
-            color,
-            textColor,
-          };
-        } else {
-          // Check for future results and set the nearest one
-          const futureResults = results.filter(
-            (result) => result.game_id === game.id
-          );
-
-          if (futureResults.length > 0) {
-            futureResults.sort(
-              (a, b) => a.selected_time.seconds - b.selected_time.seconds
-            );
-
-            const selectedResult = futureResults[0];
-            const { color, textColor } = getRandomColor();
-
-            updatedGameData[game.id] = {
-              game,
-              result: selectedResult,
-              color,
-              textColor,
-            };
-          } else {
-            // If there are no results at all
-            const { color, textColor } = getRandomColor();
-            updatedGameData[game.id] = {
-              game,
-              result: null,
-              color,
-              textColor,
-            };
-          }
-        }
-      });
-
-      setGameData(updatedGameData);
-    }
-  }, [games, results]);
+    if (games.length === 0) return;
+    let cancelled = false;
+    // Latest result per game (falls back to the nearest upcoming one) -
+    // one or two 1-document reads per game instead of the whole collection.
+    Promise.all(
+      games.map(async (game) => {
+        const result = await fetchLatestResultForGame(game.id);
+        const { color, textColor } = getRandomColor();
+        return [game.id, { game, result, color, textColor }];
+      })
+    )
+      .then((entries) => {
+        if (!cancelled) setGameData(Object.fromEntries(entries));
+      })
+      .catch((error) =>
+        console.error("Failed to fetch game results:", error)
+      );
+    return () => {
+      cancelled = true;
+    };
+  }, [games]);
   return (
     <>
       <div
