@@ -10,6 +10,8 @@ import {
   getYear,
   startOfMonth,
   endOfMonth,
+  startOfDay,
+  endOfDay,
   addDays,
   getDaysInMonth,
 } from "date-fns";
@@ -23,12 +25,33 @@ const Resultlistone = () => {
     new Date(getYear(new Date()), getMonth(new Date()), 1)
   );
 
-  // Only the selected month's results, fetched server-side. A range on
-  // selected_time alone needs no composite index.
-  const { results } = useResults({
-    startMs: startOfMonth(selectedDate).getTime(),
-    endMs: endOfMonth(selectedDate).getTime(),
+  // The month is fetched in two slices so each gets the right CDN cache
+  // tier: the bulk (month start -> yesterday) caches long at the edge,
+  // while today's slice stays on the 60s tier so new results show up fast.
+  // For past months the bulk covers the whole month and the today-slice
+  // request is skipped.
+  const monthStartMs = startOfMonth(selectedDate).getTime();
+  const monthEndMs = endOfMonth(selectedDate).getTime();
+  const todayStartMs = startOfDay(new Date()).getTime();
+  const monthIncludesToday =
+    todayStartMs >= monthStartMs && todayStartMs <= monthEndMs;
+  const bulkEndMs = monthIncludesToday ? todayStartMs - 1 : monthEndMs;
+
+  const { results: bulkResults } = useResults({
+    startMs: monthStartMs,
+    endMs: bulkEndMs,
+    // On the 1st of the month there are no past days to fetch yet.
+    enabled: bulkEndMs >= monthStartMs,
   });
+  const { results: todayResults } = useResults({
+    startMs: todayStartMs,
+    endMs: endOfDay(new Date()).getTime(),
+    enabled: monthIncludesToday,
+  });
+  const results = useMemo(
+    () => [...bulkResults, ...todayResults],
+    [bulkResults, todayResults]
+  );
 
   const handleDateSelection = (date) => {
     setSelectedDate(new Date(getYear(date), getMonth(date), 1));
